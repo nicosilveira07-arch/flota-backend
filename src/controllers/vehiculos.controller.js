@@ -81,16 +81,85 @@ const crearVehiculo = async (req, res) => {
 ========================= */
 const obtenerVehiculos = async (req, res) => {
   try {
+
     const result = await pool.query(`
-      SELECT *
-      FROM vehiculos
-      ORDER BY id DESC
+      SELECT DISTINCT ON (v.id)
+
+        /* =========================
+           VEHICULO
+        ========================= */
+        v.id,
+        v.tipo,
+        v.marca,
+        v.modelo,
+        v.matricula,
+        v.anio,
+        v.km_actual,
+        v.estado,
+        v.imagen,
+        v.motivo_radiado,
+
+        /* =========================
+           RESERVA
+        ========================= */
+        r.id AS reserva_id,
+        r.fecha,
+        r.hora_desde,
+        r.hora_hasta,
+        r.motivo,
+        r.estado AS reserva_estado,
+
+        usuario_reserva.id AS solicitante_id,
+
+        /* =========================
+           OPERATIVO
+        ========================= */
+        o.id AS operativo_id,
+        o.usuario_id AS operativo_usuario_id,
+        o.destino,
+        o.km_salida,
+        o.fecha_salida,
+        o.estado AS operativo_estado,
+
+        usuario_operativo.nombre AS chofer,
+        TRIM(usuario_reserva.nombre || ' ' || COALESCE(usuario_reserva.apellido, '')) AS solicitante
+
+      FROM vehiculos v
+
+      /* =========================
+         RESERVAS
+      ========================= */
+      LEFT JOIN reservas r
+        ON r.vehiculo_id = v.id
+        AND r.estado IN ('PENDIENTE', 'APROBADA')
+
+      LEFT JOIN usuarios usuario_reserva
+        ON usuario_reserva.id = r.usuario_id
+
+      /* =========================
+         OPERATIVOS
+      ========================= */
+      LEFT JOIN operativos o
+        ON o.vehiculo_id = v.id
+        AND o.estado = 'ACTIVO'
+
+      LEFT JOIN usuarios usuario_operativo
+        ON usuario_operativo.id = o.usuario_id
+
+      ORDER BY
+        v.id,
+        r.id DESC,
+        o.id DESC
     `);
 
     return res.json(result.rows);
 
   } catch (error) {
-    console.error("ERROR GET VEHICULOS:", error);
+
+    console.error(
+      "ERROR GET VEHICULOS:",
+      error
+    );
 
     return res.status(500).json({
       error: error.message
