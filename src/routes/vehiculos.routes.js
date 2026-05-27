@@ -35,6 +35,15 @@ router.get(
 );
 
 /* =========================
+   HISTORIAL (⚠️ SIEMPRE ARRIBA DE :id)
+========================= */
+router.get(
+  '/:id/historial',
+  verifyToken,
+  getHistorialVehiculo
+);
+
+/* =========================
    OBTENER POR ID
 ========================= */
 router.get(
@@ -64,20 +73,12 @@ router.delete(
 );
 
 /* =========================
-   HISTORIAL
-========================= */
-router.get(
-  '/:id/historial',
-  verifyToken,
-  getHistorialVehiculo
-);
-
-/* =========================
    INICIAR OPERATIVO
 ========================= */
 router.put(
   '/:id/iniciar-operativo',
   verifyToken,
+  checkRole("administrador", "ingeniero", "chofer"),
   iniciarOperativoVehiculo
 );
 
@@ -87,7 +88,7 @@ router.put(
 router.put(
   '/:id/finalizar',
   verifyToken,
-  checkRole("administrador", "chofer", "pistero", "ingeniero"),
+  checkRole("administrador", "chofer", "ingeniero"),
   finalizarVehiculo
 );
 
