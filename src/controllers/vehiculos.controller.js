@@ -85,7 +85,7 @@ const obtenerVehiculos = async (req, res) => {
       SELECT DISTINCT ON (v.id)
 
         /* =========================
-           VEHÍCULO
+           VEHICULO
         ========================= */
         v.id,
         v.tipo,
@@ -99,7 +99,7 @@ const obtenerVehiculos = async (req, res) => {
         v.motivo_radiado,
 
         /* =========================
-           RESERVA ACTIVA
+           RESERVA
         ========================= */
         r.id AS reserva_id,
         r.fecha,
@@ -110,7 +110,7 @@ const obtenerVehiculos = async (req, res) => {
         r.usuario_id AS solicitante_id,
 
         /* =========================
-           OPERATIVO ACTIVO
+           OPERATIVO
         ========================= */
         o.id AS operativo_id,
         o.usuario_id AS operativo_usuario_id,
@@ -122,28 +122,27 @@ const obtenerVehiculos = async (req, res) => {
         /* =========================
            USUARIOS (SAFE)
         ========================= */
-        COALESCE(u1.nombre, 'No definido') AS chofer,
-
-        CONCAT(
-          COALESCE(u2.nombre, ''),
-          ' ',
-          COALESCE(u2.apellido, '')
-        ) AS solicitante
+        u1.nombre AS chofer,
+        CONCAT(COALESCE(u2.nombre,''), ' ', COALESCE(u2.apellido,'')) AS solicitante
 
       FROM vehiculos v
 
-      /* RESERVAS */
+      /* =========================
+         RESERVAS
+      ========================= */
       LEFT JOIN reservas r
         ON r.vehiculo_id = v.id
-       AND r.estado IN ('PENDIENTE', 'APROBADA')
+        AND r.estado IN ('PENDIENTE', 'APROBADA')
 
       LEFT JOIN usuarios u2
         ON u2.id = r.usuario_id
 
-      /* OPERATIVOS */
+      /* =========================
+         OPERATIVOS
+      ========================= */
       LEFT JOIN operativos o
         ON o.vehiculo_id = v.id
-       AND o.estado = 'ACTIVO'
+        AND o.estado = 'ACTIVO'
 
       LEFT JOIN usuarios u1
         ON u1.id = o.usuario_id
