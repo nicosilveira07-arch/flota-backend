@@ -3,6 +3,8 @@ const cors = require('cors');
 const path = require("path");
 require('dotenv').config();
 
+const seedUsers = require("./utils/seedUsers");
+
 const app = express();
 
 const allowedOrigins = [
@@ -14,14 +16,18 @@ const corsOptions = {
   origin: function (origin, callback) {
     if (!origin) return callback(null, true);
 
-    if (allowedOrigins.includes(origin)) {
+    if (
+      origin === "http://localhost:5173" ||
+      origin === process.env.FRONTEND_URL ||
+      origin.endsWith(".vercel.app")
+    ) {
       return callback(null, true);
     }
 
-    return callback(new Error("CORS not allowed"), false);
+    return callback(null, false);
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"]
+  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"]
 };
 
 app.use(cors(corsOptions));
@@ -44,11 +50,15 @@ app.use('/api/vehiculos', require('./routes/vehiculos.routes'));
 app.use('/api/reservas', require('./routes/reservas.routes'));
 app.use('/api/upload', require('./routes/upload.routes'));
 app.use('/api/usuarios', require('./routes/usuarios.routes'));
+seedUsers();
 app.use('/api/notificaciones', require('./routes/notificaciones.routes'));
 app.use('/api/operativos', require('./routes/operativos.routes'));
 
 
+
 const PORT = process.env.PORT || 4000;
+
+
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
