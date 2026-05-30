@@ -57,21 +57,36 @@ const eliminarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 1. BORRAR TODAS LAS RELACIONES
+    await pool.query(
+      "DELETE FROM notificaciones WHERE usuario_id = $1",
+      [id]
+    );
 
-    await pool.query("DELETE FROM operativos WHERE usuario_id = $1", [id]);
-    await pool.query("DELETE FROM reservas WHERE usuario_id = $1", [id]);
+    await pool.query(
+      "DELETE FROM operativos WHERE usuario_id = $1",
+      [id]
+    );
 
-    // (si existen más tablas, también deben ir aquí)
+    await pool.query(
+      "DELETE FROM reservas WHERE usuario_id = $1",
+      [id]
+    );
 
-    // 2. BORRAR USUARIO
-    await pool.query("DELETE FROM usuarios WHERE id = $1", [id]);
+    await pool.query(
+      "DELETE FROM usuarios WHERE id = $1",
+      [id]
+    );
 
     res.json({ ok: true });
 
   } catch (error) {
     console.error("DELETE USER ERROR:", error);
-    res.status(500).json({ error: error.message });
+
+    res.status(500).json({
+      error: error.message,
+      detail: error.detail,
+      constraint: error.constraint
+    });
   }
 };
 

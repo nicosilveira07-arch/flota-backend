@@ -21,7 +21,7 @@ const checkRole = require('../middleware/role.middleware');
 router.post(
   '/',
   verifyToken,
-  checkRole("administrador", "ingeniero"),
+  checkRole("administrador", "ingeniero","pistero"),
   crearVehiculo
 );
 
@@ -58,7 +58,7 @@ router.get(
 router.put(
   '/:id',
   verifyToken,
-  checkRole("administrador", "ingeniero"),
+  checkRole("administrador", "ingeniero","pistero"),
   actualizarVehiculo
 );
 
@@ -68,7 +68,7 @@ router.put(
 router.delete(
   '/:id',
   verifyToken,
-  checkRole("administrador", "ingeniero"),
+  checkRole("administrador", "ingeniero","pistero"),
   eliminarVehiculo
 );
 
@@ -78,7 +78,7 @@ router.delete(
 router.put(
   '/:id/iniciar-operativo',
   verifyToken,
-  checkRole("administrador", "ingeniero", "chofer"),
+  checkRole("administrador", "ingeniero", "chofer","pistero"),
   iniciarOperativoVehiculo
 );
 
@@ -88,7 +88,7 @@ router.put(
 router.put(
   '/:id/finalizar',
   verifyToken,
-  checkRole("administrador", "chofer", "ingeniero"),
+  checkRole("administrador", "chofer", "ingeniero","pistero"),
   finalizarVehiculo
 );
 

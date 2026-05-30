@@ -1,5 +1,6 @@
 const pool = require('../database/db');
-
+const fs = require("fs");
+const path = require("path");
 /* =========================
    HISTORIAL HELPER
 ========================= */
@@ -122,7 +123,7 @@ const obtenerVehiculos = async (req, res) => {
         /* =========================
            USUARIOS (SAFE)
         ========================= */
-        u1.nombre AS chofer,
+        CONCAT(COALESCE(u1.nombre,''), ' ', COALESCE(u1.apellido,'')) AS chofer,
         CONCAT(COALESCE(u2.nombre,''), ' ', COALESCE(u2.apellido,'')) AS solicitante
 
       FROM vehiculos v
@@ -205,7 +206,33 @@ const actualizarVehiculo = async (req, res) => {
       imagen,
       motivo_radiado
     } = req.body;
-  
+
+    // 🔥 BUSCAR VEHICULO ACTUAL
+    const viejo = await pool.query(
+      "SELECT imagen FROM vehiculos WHERE id = $1",
+      [id]
+    );
+
+    if (viejo.rows.length === 0) {
+      return res.status(404).json({ message: "Vehiculo no encontrado" });
+    }
+
+    const imagenAnterior = viejo.rows[0].imagen;
+
+    // 🔥 SI HAY NUEVA IMAGEN → BORRAR LA VIEJA
+    if (imagen && imagenAnterior && imagenAnterior.includes("/uploads/vehiculos/")) {
+      const filename = imagenAnterior.split("/uploads/vehiculos/")[1];
+
+      const filePath = path.join(
+        __dirname,
+        "../../uploads/vehiculos",
+        filename
+      );
+
+      fs.unlink(filePath, (err) => {
+        if (err) console.log("No se pudo borrar imagen anterior:", err.message);
+      });
+    }
 
     const result = await pool.query(
       `
@@ -237,10 +264,6 @@ const actualizarVehiculo = async (req, res) => {
       ]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Vehiculo no encontrado" });
-    }
-
     return res.json(result.rows[0]);
 
   } catch (error) {
@@ -248,6 +271,7 @@ const actualizarVehiculo = async (req, res) => {
     return res.status(500).json({ error: error.message });
   }
 };
+
 /* =========================
    INICIAR OPERATIVO
 ========================= */
@@ -332,6 +356,25 @@ const iniciarOperativoVehiculo = async (req, res) => {
         error: "KM inválido"
       });
     }
+    
+    
+    const operativoActivoUsuario = await pool.query(
+      `
+      SELECT id
+      FROM operativos
+      WHERE usuario_id = $1
+        AND estado = 'ACTIVO'
+      LIMIT 1
+      `,
+      [req.user.id]
+    );
+    
+    if (operativoActivoUsuario.rows.length > 0) {
+      return res.status(400).json({
+        error: "Ya tenés un vehículo en uso"
+      });
+    }
+  
 
     // crear operativo
     await pool.query(

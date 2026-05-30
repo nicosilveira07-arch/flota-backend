@@ -1,13 +1,18 @@
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
-const cloudinary = require("./cloudinary");
+const path = require("path");
 
-const storage = new CloudinaryStorage({
-  cloudinary: cloudinary,
-  params: {
-    folder: "flota-vehiculos",
-    allowed_formats: ["jpg", "png", "jpeg"],
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "uploads/vehiculos");
   },
+
+  filename: (req, file, cb) => {
+    const nombre =
+      Date.now() +
+      path.extname(file.originalname);
+
+    cb(null, nombre);
+  }, 
 });
 
 const upload = multer({ storage });

@@ -20,9 +20,26 @@ const crearReserva = async (req, res) => {
 
     const usuario_id = req.user?.id;
     const usuario_nombre = req.user?.nombre || "sistema";
-
+      
     if (!usuario_id) {
       return res.status(401).json({ error: "Usuario no autenticado" });
+    }
+    
+    const reservaActiva = await pool.query(
+      `
+      SELECT id
+      FROM reservas
+      WHERE usuario_id = $1
+      AND estado IN ('PENDIENTE', 'APROBADA')
+      LIMIT 1
+      `,
+      [usuario_id]
+    );
+    
+    if (reservaActiva.rows.length > 0) {
+      return res.status(400).json({
+        error: "Ya tienes una reserva activa"
+      });
     }
 
     const vehiculoRes = await pool.query(
